@@ -145,8 +145,11 @@ def sort_1dim(constructorTEF,
         var_Q = np.linspace(varmin, varmax, N+1)
 
     # Changelog: 27.05.2021: Change var_Q to var_q
+    # Changelog: 04.05.2024: Change var_q back to var_Q and subtract 1
     # compute the index idx that will be used for sorting
-    idx = xr.apply_ufunc(np.digitize, constructorTEF.tracer, var_q) 
+    idx = np.digitize(constructorTEF.tracer, var_Q) - 1
+    if np.any(idx < 0):
+        print("Warning: Tracer values exist below the lowest bin.")
 
     out_q = np.zeros((len(constructorTEF.ds.time), N))
 
@@ -277,8 +280,12 @@ def sort_2dim(constructorTEF,
             var_Q2 = np.linspace(varmin2, varmax2, N2+1)
 
         #sortingt
-        idx = xr.apply_ufunc(np.digitize, constructorTEF.tracer[0], var_Q)
-        idy = xr.apply_ufunc(np.digitize, constructorTEF.tracer[1], var_Q2)
+        idx = np.digitize(constructorTEF.tracer[0], var_Q) - 1
+        idy = np.digitize(constructorTEF.tracer[1], var_Q2) - 1
+        if np.any(idx < 0):
+            print("Warning: Values of the first tracer exist below the lowest bin.")
+        if np.any(idy < 0):
+            print("Warning: Values of the second tracer exist below the lowest bin.")
 
         out_q = np.zeros((len(constructorTEF.ds.time),N1, N2))
         
