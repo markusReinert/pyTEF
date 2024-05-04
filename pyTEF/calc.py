@@ -161,13 +161,21 @@ def sort_1dim(constructorTEF,
                                 axis=1)[:,::-1],
                       np.zeros((len(constructorTEF.ds.time), 1)),axis=1)*delta_var
     
+    # Use the first letter of the tracer name as the coordinate name,
+    # e.g., "s" for salinity, "t" for temperature
+    coord_q = constructorTEF.tracer.name[0].lower()
+    # If tracer name starts with q, use c instead, as q is reserved for transport
+    if coord_q == "q":
+        coord_q = "c"
+    coord_Q = coord_q.upper()
+
     out = xr.Dataset({
-    "q": (["time", "var_q"], out_q),
-    "Q": (["time", "var_Q"], out_Q)},
+    "q": (["time", coord_q], out_q),
+    "Q": (["time", coord_Q], out_Q)},
     coords={
         "time": (["time"], constructorTEF.ds["time"].data),
-        "var_q": (["var_q"],var_q),
-        "var_Q": (["var_Q"], var_Q),
+        coord_q: ([coord_q], var_q, constructorTEF.tracer.attrs),
+        coord_Q: ([coord_Q], var_Q, constructorTEF.tracer.attrs),
     })
     
     return out
@@ -285,15 +293,27 @@ def sort_2dim(constructorTEF,
         out_Q_tmp = np.cumsum(np.cumsum(out_q[:,::-1,::-1],axis=1),axis=2)[:,::-1,::-1]*delta_var2*delta_var
         out_Q[:,:-1,:-1] = out_Q_tmp
         
+        # Use the first letters of the tracer names as the coordinate names,
+        # e.g., "s" for salinity, "t" for temperature
+        coords_q = []
+        for tracer in constructorTEF.tracer:
+            coord_q = tracer.name[0].lower()
+            # If tracer name starts with q, use c instead, as q is reserved for transport
+            coords_q.append(coord_q if coord_q != "q" else "c")
+        # If both coordinate names are equal, add 2 to the second name
+        if coords_q[1] == coords_q[0]:
+            coords_q[1] += "2"
+        coords_Q = [c.upper() for c in coords_q]
+
         out = xr.Dataset({
-        "q2": (["time", "var_q", "var_q2"], out_q),
-        "Q2": (["time", "var_Q", "var_Q2"], out_Q)},
+        "q2": (["time", *coords_q], out_q),
+        "Q2": (["time", *coords_Q], out_Q)},
         coords={
             "time": (["time"], constructorTEF.ds["time"].data),
-            "var_q": (["var_q"],var_q),
-            "var_q2": (["var_q2"], var_q2),
-            "var_Q": (["var_Q"], var_Q),
-            "var_Q2": (["var_Q2"], var_Q2),
+            coords_q[0]: ([coords_q[0]], var_q, constructorTEF.tracer[0].attrs),
+            coords_q[1]: ([coords_q[1]], var_q2, constructorTEF.tracer[1].attrs),
+            coords_Q[0]: ([coords_Q[0]], var_Q, constructorTEF.tracer[0].attrs),
+            coords_Q[1]: ([coords_Q[1]], var_Q2, constructorTEF.tracer[1].attrs),
         })
         
         return out
