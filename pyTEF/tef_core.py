@@ -69,9 +69,16 @@ class constructorTEF:
                                     "lat",
                                     "lon")
 
-    def sort_1dim(self, N=1024, minmaxrange=None):
-        """Transform self.transport into self.tracer-coordinates with N bins in minmaxrange."""
-        return calc.sort_1dim(self, N, minmaxrange)
+    def sort_1dim(self, N=1024, minmaxrange=None, include_tracer_transport=False):
+        """Transform self.transport into self.tracer-coordinates with N bins in minmaxrange.
+
+        When the option include_tracer_transport is set to True, then
+        the product of tracer times transport is also sorted into the
+        same bins and included in the returned xarray Dataset.  The
+        binned tracer transport is called q/Q plus the first letter of
+        the tracer name (or "c" if the tracer starts with "q").
+        """
+        return calc.sort_1dim(self, N, minmaxrange, include_tracer_transport)
 
     def sort_2dim(self, N=(1024, 1024), minmaxrange=None, minmaxrange2=None):
         """Transform self.transport into 2-dimensional self.tracer-coordinates."""
