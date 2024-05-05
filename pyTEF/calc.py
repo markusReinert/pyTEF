@@ -96,7 +96,8 @@ def convert_q_to_Q(var_q, q, var_q2 = None):
 # %% ../01_calc.ipynb 6
 def sort_1dim(constructorTEF,
               N = 1024,
-              minmaxrange = None):
+              minmaxrange = None,
+              include_tracer_transport = False):
     """Performs coordinate transformation by given variable."""
     if constructorTEF.tracer is None:
         raise ValueError("Please define a variable that you want to sort by.")
@@ -153,16 +154,30 @@ def sort_1dim(constructorTEF,
 
     out_q = np.zeros((len(constructorTEF.ds.time), N))
 
+    if include_tracer_transport:
+        out_qc = np.zeros_like(out_q)
+        tracer_transport = constructorTEF.tracer * constructorTEF.transport
+
     for i in tqdm(range(N)):
         #Sorting into bins
         out_q[:, i] = constructorTEF.transport.where(idx == i).sum(["depth",
                                                                     "lat",
                                                                     "lon"],
                                                      dtype=np.float64) / delta_var
+        if include_tracer_transport:
+            out_qc[:, i] = tracer_transport.where(idx == i).sum(
+                ["depth", "lat", "lon"], dtype=np.float64
+            ) / delta_var
     
     out_Q = np.append(np.cumsum(out_q[:,::-1],
                                 axis=1)[:,::-1],
                       np.zeros((len(constructorTEF.ds.time), 1)),axis=1)*delta_var
+    if include_tracer_transport:
+        out_Qc = np.append(
+            np.cumsum(out_qc[:,::-1], axis=1)[:,::-1],
+            np.zeros((len(constructorTEF.ds.time), 1)),
+            axis=1,
+        ) * delta_var
     
     # Use the first letter of the tracer name as the coordinate name,
     # e.g., "s" for salinity, "t" for temperature
@@ -180,6 +195,10 @@ def sort_1dim(constructorTEF,
         coord_q: ([coord_q], var_q, constructorTEF.tracer.attrs),
         coord_Q: ([coord_Q], var_Q, constructorTEF.tracer.attrs),
     })
+
+    if include_tracer_transport:
+        out["q" + coord_q] = (["time", coord_q], out_qc)
+        out["Q" + coord_q] = (["time", coord_Q], out_Qc)
     
     return out
 
