@@ -352,9 +352,14 @@ def calc_bulk_values(coord,
                      Qc=None,
                      Q_thresh=None,
                      index=None,
-                     **kwargs):
-    """Calculates the bulk values from a provided Q profile using the dividing salinity approach 
-    proposed by MacCready et al. (2018) and described/tested in detail by Lorenz et al. (2019)"""
+                     ):
+    """Calculate the bulk values from a provided Q profile.
+
+    This methods uses the dividing salinity approach proposed by MacCready
+    et al. (2018) and described/tested in detail by Lorenz et al. (2019).
+
+    If a tracer transport Qc is provided, also its bulk values are computed.
+    """
     coord_min=coord[0]
     delta_var=coord[1]-coord[0]
 
